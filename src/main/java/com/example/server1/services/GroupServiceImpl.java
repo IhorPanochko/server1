@@ -38,7 +38,7 @@ public class GroupServiceImpl implements GroupService {
                     groupDto.setName(groups.getName());
 
                     Flux<UserGroupDto> map = Flux.fromIterable(groups.getUsers()).mapNotNull(userGroupItem -> {
-                        String userId = "userGroupItem.getId()";
+                        String userId = userGroupItem.getId();
                         Long zip = userGroupItem.getZip();
                         Mono<UserDto> usersByIdList = Mono.from(baseClient.findUsersByIdList(List.of(userId)));
                         Mono<LocationDto> locationDtoFlux = Mono.from(baseClient.findLocationByZipList(List.of(zip)));
