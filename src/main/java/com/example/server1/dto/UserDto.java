@@ -1,6 +1,8 @@
 package com.example.server1.dto;
 
-public class UserDto {
+import java.io.Serializable;
+
+public class UserDto implements Serializable {
 
     private String id;
 

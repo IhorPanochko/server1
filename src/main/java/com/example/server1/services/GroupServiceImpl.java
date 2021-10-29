@@ -6,6 +6,8 @@ import com.example.server1.dto.GroupDto;
 import com.example.server1.dto.LocationDto;
 import com.example.server1.dto.UserDto;
 import com.example.server1.dto.UserGroupDto;
+import com.example.server1.exceprions.AbstractException;
+import com.example.server1.exceprions.GroupNotFoundException;
 import com.example.server1.repository.GroupsRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -28,30 +30,32 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public Mono<GroupDto> getById(String id) {
-        Mono<Groups> groupsMono = groupsRepository.findById(id);
+        return groupsRepository.findById(id)
+                .switchIfEmpty(Mono.error(new GroupNotFoundException("Group is not found", id)))
+                .map(groups -> {
+                    GroupDto groupDto = new GroupDto();
+                    groupDto.setId(groups.getId());
+                    groupDto.setName(groups.getName());
 
-        return groupsMono.map(groups -> {
-            GroupDto groupDto = new GroupDto();
-            groupDto.setId(groups.getId());
-            groupDto.setName(groups.getName());
+                    Flux<UserGroupDto> map = Flux.fromIterable(groups.getUsers()).mapNotNull(userGroupItem -> {
+                        String userId = "userGroupItem.getId()";
+                        Long zip = userGroupItem.getZip();
+                        Mono<UserDto> usersByIdList = Mono.from(baseClient.findUsersByIdList(List.of(userId)));
+                        Mono<LocationDto> locationDtoFlux = Mono.from(baseClient.findLocationByZipList(List.of(zip)));
+                        Mono<UserGroupDto> userGroupDtoMono = Mono.zip(usersByIdList, locationDtoFlux).map(userDtoLocationDtoTuple2 -> {
+                            UserDto userDto = userDtoLocationDtoTuple2.getT1();
+                            LocationDto locationDto = userDtoLocationDtoTuple2.getT2();
+                            return new UserGroupDto(userDto.getId(), userDto.getName(), locationDto.getCity());
+                        }).doOnError(throwable -> {
+                            throw new AbstractException("service error", throwable.getMessage());
+                        });
 
-            Flux<UserGroupDto> map = Flux.fromIterable(groups.getUsers()).mapNotNull(userGroupItem -> {
-                String userId = userGroupItem.getId();
-                Long zip = userGroupItem.getZip();
-                Mono<UserDto> usersByIdList = Mono.from(baseClient.findUsersByIdList(List.of(userId)));
-                Mono<LocationDto> locationDtoFlux = Mono.from(baseClient.findLocationByZipList(List.of(zip)));
-                Mono<UserGroupDto> userGroupDtoMono = Mono.zip(usersByIdList, locationDtoFlux).map(userDtoLocationDtoTuple2 -> {
-                    UserDto userDto = userDtoLocationDtoTuple2.getT1();
-                    LocationDto locationDto = userDtoLocationDtoTuple2.getT2();
-                    return new UserGroupDto(userDto.getId(),userDto.getName(),locationDto.getCity());
+                        return userGroupDtoMono.block();
+                    });
+                    List<UserGroupDto> userGroupDtos = map.collectList().block();
+                    groupDto.setUsers(userGroupDtos);
+                    return groupDto;
                 });
-
-                return userGroupDtoMono.block();
-            });
-            List<UserGroupDto> userGroupDtos = map.collectList().block();
-            groupDto.setUsers(userGroupDtos);
-            return groupDto;
-        });
     }
 
     @Override
