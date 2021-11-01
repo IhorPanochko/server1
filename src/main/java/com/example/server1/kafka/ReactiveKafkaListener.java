@@ -11,13 +11,6 @@ import org.springframework.stereotype.Service;
 @Component
 @Service
 public class ReactiveKafkaListener {
-    //
-//    private final ReactiveKafkaConsumerTemplate<String, ProducerDTO> consumer;
-//
-//    public ReactiveKafkaListener(ReactiveKafkaConsumerTemplate<String, ProducerDTO> consumer) {
-//        this.consumer = consumer;
-//    }
-
 
     private final MessageService messageService;
 
@@ -28,7 +21,6 @@ public class ReactiveKafkaListener {
     @KafkaListener(topics = "topic2", groupId = "reactive", clientIdPrefix = "reactive")
     public void listen(@Payload ProducerDTO producerDTO) {
         ProducerDTO result = getProducerDTO(producerDTO);
-        System.out.println(result);
         Message message = toEntity(result);
         messageService.create(message).subscribe();
     }

@@ -5,9 +5,7 @@ import com.example.server1.documents.UserGroupItem;
 import com.example.server1.dto.*;
 import com.example.server1.exceprions.AbstractException;
 import com.example.server1.exceprions.GroupNotFoundException;
-import com.example.server1.kafka.ProducerDTO;
 import com.example.server1.repository.GroupsRepository;
-import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,15 +16,12 @@ import java.util.List;
 @Service
 public class GroupServiceImpl implements GroupService {
 
-    private final ReactiveKafkaProducerTemplate<String, ProducerDTO> producer;
 
     private final GroupsRepository groupsRepository;
     private final BaseClient baseClient;
 
-    public GroupServiceImpl(ReactiveKafkaProducerTemplate<String, ProducerDTO> producer,
-                            GroupsRepository groupsRepository,
+    public GroupServiceImpl(GroupsRepository groupsRepository,
                             BaseClient baseClient) {
-        this.producer = producer;
         this.groupsRepository = groupsRepository;
         this.baseClient = baseClient;
     }
@@ -80,8 +75,4 @@ public class GroupServiceImpl implements GroupService {
         groupsRepository.save(groups).subscribe();
     }
 
-    @Override
-    public void callKafka() {
-        producer.send("topic1", new ProducerDTO("qwerty")).subscribe();
-    }
 }

@@ -1,11 +1,9 @@
 package com.example.server1.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.io.Serializable;
 
-@JsonRootName("MessageDto")
 public class MessageDto implements Serializable {
 
     @JsonProperty("id")
