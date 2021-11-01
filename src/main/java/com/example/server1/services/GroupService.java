@@ -8,4 +8,6 @@ public interface GroupService {
     Mono<GroupDto> getById(String id);
 
     void addGroups();
+
+    void callKafka();
 }

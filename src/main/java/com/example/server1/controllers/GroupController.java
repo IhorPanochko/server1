@@ -28,4 +28,9 @@ public class GroupController {
         return groupService.getById(id);
     }
 
+    @GetMapping("/calKafka")
+    public void callKafka() {
+        groupService.callKafka();
+    }
+
 }
